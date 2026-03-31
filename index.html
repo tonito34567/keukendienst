@@ -1,0 +1,548 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>JO15-2 Wedstrijdschema</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #eef4ee;
+            color: #1a1a1a;
+            min-height: 100vh;
+        }
+
+        /* ---- HEADER ---- */
+        .header {
+            background: linear-gradient(160deg, #1b4332 0%, #2d6a4f 100%);
+            color: white;
+            padding: 16px 16px 0;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 2px 16px rgba(0,0,0,0.25);
+        }
+        .header-top { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
+        .header-icon { font-size: 28px; }
+        .header-title { font-size: 17px; font-weight: 800; letter-spacing: -0.3px; }
+        .header-subtitle { font-size: 12px; opacity: 0.75; margin-top: 1px; }
+        .tabs {
+            display: flex; gap: 4px;
+            background: rgba(0,0,0,0.2);
+            border-radius: 10px 10px 0 0;
+            padding: 4px 4px 0;
+            margin-top: 4px;
+        }
+        .tab {
+            flex: 1; padding: 10px 8px; text-align: center;
+            font-size: 13px; font-weight: 600;
+            color: rgba(255,255,255,0.55);
+            cursor: pointer;
+            border-radius: 8px 8px 0 0;
+            transition: all 0.2s;
+            background: transparent;
+            border: none;
+        }
+        .tab.active { background: #eef4ee; color: #1b4332; }
+
+        /* ---- CONTENT ---- */
+        .content { padding: 12px 12px 90px; max-width: 580px; margin: 0 auto; }
+
+        /* ---- CARDS ---- */
+        .card {
+            background: white;
+            border-radius: 16px;
+            margin-bottom: 12px;
+            overflow: hidden;
+            box-shadow: 0 1px 8px rgba(0,0,0,0.08);
+            transition: transform 0.1s, box-shadow 0.1s;
+        }
+        .card:active { transform: scale(0.985); }
+        .card.past { opacity: 0.65; }
+
+        .card-stripe { height: 5px; }
+        .stripe-thuis  { background: linear-gradient(90deg, #2d6a4f, #52b788); }
+        .stripe-uit    { background: linear-gradient(90deg, #e85d04, #f4a261); }
+        .stripe-beker  { background: linear-gradient(90deg, #1565c0, #42a5f5); }
+        .stripe-oefen  { background: linear-gradient(90deg, #6d28d9, #a78bfa); }
+        .stripe-kantine{ background: linear-gradient(90deg, #92400e, #d97706); }
+
+        .card-body { padding: 14px 16px 16px; }
+
+        .card-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 6px; }
+        .card-date-line { font-size: 12px; color: #888; font-weight: 500; }
+        .next-tag {
+            display: inline-block;
+            margin-top: 4px;
+            background: #ff6b35;
+            color: white;
+            font-size: 10px;
+            font-weight: 700;
+            padding: 2px 8px;
+            border-radius: 20px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .badges { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; }
+        .badge {
+            display: inline-block;
+            padding: 3px 10px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 700;
+        }
+        .badge-thuis  { background: #d8f3dc; color: #1b4332; }
+        .badge-uit    { background: #ffe5d0; color: #7c2d12; }
+        .badge-beker  { background: #dce8ff; color: #0d47a1; }
+        .badge-oefen  { background: #ede9fe; color: #4c1d95; }
+        .badge-kantine{ background: #fef3c7; color: #92400e; }
+
+        .card-team { font-size: 18px; font-weight: 800; color: #111; margin-bottom: 4px; line-height: 1.25; }
+        .card-meta {
+            display: flex; flex-wrap: wrap; gap: 10px;
+            font-size: 13px; color: #666;
+            margin-bottom: 12px;
+        }
+        .meta-item { display: flex; align-items: center; gap: 4px; }
+
+        hr.divider { border: none; border-top: 1px solid #f0f0f0; margin: 10px 0; }
+
+        .info-row { display: flex; align-items: flex-start; gap: 8px; margin-bottom: 8px; }
+        .info-label {
+            font-size: 11px; font-weight: 700; color: #999;
+            text-transform: uppercase; letter-spacing: 0.5px;
+            min-width: 52px; padding-top: 3px; flex-shrink: 0;
+        }
+        .info-value { font-size: 14px; font-weight: 500; color: #222; flex: 1; }
+        .info-value.ntb { color: #e85d04; font-style: italic; }
+
+        .chips { display: flex; flex-wrap: wrap; gap: 6px; }
+        .chip {
+            background: #e8f5e9; color: #2d6a4f;
+            border-radius: 20px; padding: 4px 12px;
+            font-size: 13px; font-weight: 600;
+        }
+        .chip.fiets { background: #fff3e0; color: #b45309; }
+
+        .score {
+            display: inline-block;
+            background: #1b4332; color: white;
+            font-size: 17px; font-weight: 800;
+            padding: 4px 14px; border-radius: 8px;
+            letter-spacing: 1px;
+        }
+
+        .card-actions { margin-top: 14px; display: flex; justify-content: flex-end; }
+        .btn-edit {
+            padding: 9px 18px;
+            border-radius: 10px; border: none;
+            font-size: 13px; font-weight: 700;
+            cursor: pointer;
+            background: #e8f5e9; color: #1b4332;
+            transition: background 0.2s;
+        }
+        .btn-edit:active { background: #c8e6c9; }
+
+        /* ---- MODAL ---- */
+        .overlay {
+            position: fixed; inset: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 500;
+            display: flex; align-items: flex-end;
+            opacity: 0; pointer-events: none;
+            transition: opacity 0.25s;
+        }
+        .overlay.open { opacity: 1; pointer-events: all; }
+
+        .modal {
+            background: white;
+            border-radius: 22px 22px 0 0;
+            width: 100%; max-height: 88vh;
+            overflow-y: auto;
+            padding: 8px 20px 34px;
+            transform: translateY(100%);
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .overlay.open .modal { transform: translateY(0); }
+
+        .modal-handle { width: 36px; height: 4px; background: #ddd; border-radius: 2px; margin: 12px auto 18px; }
+        .modal-title { font-size: 19px; font-weight: 800; margin-bottom: 2px; }
+        .modal-date { font-size: 13px; color: #888; margin-bottom: 22px; }
+
+        .form-group { margin-bottom: 18px; }
+        .form-label { display: block; font-size: 12px; font-weight: 700; color: #666; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 7px; }
+        .form-input {
+            width: 100%; padding: 13px 14px;
+            border: 2px solid #e0e0e0;
+            border-radius: 11px;
+            font-size: 16px; color: #111;
+            background: #fafafa;
+            transition: border-color 0.2s;
+            -webkit-appearance: none;
+        }
+        .form-input:focus { outline: none; border-color: #2d6a4f; background: white; }
+
+        .rijders-list-editor { display: flex; flex-direction: column; gap: 8px; }
+        .rijder-row { display: flex; gap: 8px; align-items: center; }
+        .rijder-row .form-input { flex: 1; }
+        .btn-remove {
+            width: 40px; height: 40px; flex-shrink: 0;
+            border-radius: 10px; border: none;
+            background: #fee2e2; color: #b91c1c;
+            font-size: 20px; font-weight: 300;
+            cursor: pointer; display: flex;
+            align-items: center; justify-content: center;
+        }
+        .btn-add {
+            width: 100%; padding: 11px;
+            border: 2px dashed #bbf7d0;
+            border-radius: 11px; background: none;
+            color: #2d6a4f; font-size: 14px;
+            font-weight: 700; cursor: pointer;
+            margin-top: 8px;
+        }
+        .btn-add:active { background: #f0fdf4; }
+
+        .modal-actions { display: flex; gap: 10px; margin-top: 26px; }
+        .btn-cancel {
+            flex: 1; padding: 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 13px; background: white;
+            color: #555; font-size: 15px;
+            font-weight: 700; cursor: pointer;
+        }
+        .btn-save {
+            flex: 2; padding: 15px;
+            border: none; border-radius: 13px;
+            background: linear-gradient(135deg, #1b4332, #2d6a4f);
+            color: white; font-size: 15px;
+            font-weight: 800; cursor: pointer;
+        }
+        .btn-save:active { background: #1b4332; }
+
+        /* ---- TOAST ---- */
+        .toast {
+            position: fixed;
+            bottom: 28px; left: 50%;
+            transform: translateX(-50%) translateY(20px);
+            background: #1b4332; color: white;
+            padding: 12px 22px;
+            border-radius: 30px;
+            font-size: 14px; font-weight: 700;
+            z-index: 999; opacity: 0;
+            transition: all 0.3s;
+            white-space: nowrap;
+            pointer-events: none;
+        }
+        .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+        /* ---- EMPTY STATE ---- */
+        .empty { text-align: center; padding: 60px 20px; color: #aaa; }
+        .empty-icon { font-size: 52px; margin-bottom: 14px; }
+        .empty-text { font-size: 15px; }
+    </style>
+</head>
+<body>
+
+<div class="header">
+    <div class="header-top">
+        <div class="header-icon">⚽</div>
+        <div>
+            <div class="header-title">JO15-2 Wedstrijdschema</div>
+            <div class="header-subtitle">Onder 15 Zaterdag · 3e klasse · Najaar 2025-2026</div>
+        </div>
+    </div>
+    <div class="tabs">
+        <button class="tab active" onclick="setTab('aankomend', this)">Aankomend</button>
+        <button class="tab" onclick="setTab('gespeeld', this)">Gespeeld</button>
+        <button class="tab" onclick="setTab('alles', this)">Alles</button>
+    </div>
+</div>
+
+<div class="content" id="content"></div>
+
+<!-- Modal -->
+<div class="overlay" id="overlay" onclick="handleOverlay(event)">
+    <div class="modal" id="modal">
+        <div class="modal-handle"></div>
+        <div class="modal-title" id="modalTitle"></div>
+        <div class="modal-date" id="modalDate"></div>
+        <div id="modalForm"></div>
+        <div class="modal-actions">
+            <button class="btn-cancel" onclick="closeModal()">Annuleren</button>
+            <button class="btn-save" onclick="save()">💾 Opslaan</button>
+        </div>
+    </div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ===================== DATA =====================
+const DEFAULT = [
+    { id:1,  datum:"2026-01-17", vlag:"Jesse",  rijders:[],                                uitThuis:"Thuis", tijd:"12:30", team:"Jonathan Jo15-5",      plaats:"Driebergen",      matchType:"oefen",   eindstand:"1-0",  type:"wedstrijd" },
+    { id:2,  datum:"2026-01-24", vlag:"Jesse",  rijders:[],                                uitThuis:"Thuis", tijd:"13:15", team:"sv Parkhout Jo15-3",    plaats:"Driebergen",      matchType:"beker",   eindstand:"0-0",  type:"wedstrijd" },
+    { id:3,  datum:"2026-01-31", vlag:"Hent",   rijders:[],                                uitThuis:"Thuis", tijd:"12:45", team:"DVSA Jo15-1 J/M",       plaats:"Driebergen",      matchType:"normaal", eindstand:null,   type:"wedstrijd" },
+    { id:4,  datum:"2026-02-07", vlag:"Owen",   rijders:["Joshua","Sajid","Owen","Mila"],  uitThuis:"Uit",   tijd:"12:00", team:"Scherpenzeel Jo15-1",   plaats:"Scherpenzeel",    matchType:"normaal", eindstand:null,   type:"wedstrijd" },
+    { id:5,  datum:"2026-02-28", vlag:"Toon",   rijders:[],                                uitThuis:"Thuis", tijd:"11:45", team:"VRC Jo15-3",             plaats:"Driebergen",      matchType:"normaal", eindstand:null,   type:"wedstrijd" },
+    { id:6,  datum:"2026-03-07", vlag:"Toon",   rijders:["Joshua","Fiets","Fiets","Fiets"],uitThuis:"Uit",   tijd:"11:35", team:"Jonathan Jo15-5",        plaats:"Zeist",           matchType:"normaal", eindstand:null,   type:"wedstrijd" },
+    { id:7,  datum:"2026-03-14", vlag:"ntb",    rijders:[],                                uitThuis:"Thuis", tijd:"13:00", team:"Hooglanderveen Jo15-4",  plaats:"Driebergen",      matchType:"normaal", eindstand:null,   type:"wedstrijd" },
+    { id:8,  datum:"2026-03-21", vlag:"Thomas", rijders:["Joshua","Milan","Koen","Thomas"],uitThuis:"Uit",   tijd:"13:15", team:"DOSC Jo15-3",            plaats:"Den Dolder",      matchType:"normaal", eindstand:"0-5",  type:"wedstrijd" },
+    { id:9,  datum:"2026-03-28", vlag:"Tonito", rijders:[],                                uitThuis:"Thuis", tijd:"15:30", team:"Candia '66 Jo15-2",      plaats:"Driebergen",      matchType:"normaal", eindstand:null,   type:"wedstrijd" },
+    { id:10, datum:"2026-04-11", vlag:"ntb",    rijders:["Joshua","Fiets","Fiets","Fiets"],uitThuis:"Uit",   tijd:"08:45", team:"FZO Jo15-1",             plaats:"Zeist",           matchType:"normaal", eindstand:null,   type:"wedstrijd" },
+    { id:11, datum:"2026-04-11", type:"kantine", dienst:"Kantinedienst middag", bardienst:"Simon en Mila", keuken:"Onbekend" },
+    { id:12, datum:"2026-04-18", vlag:"Leon",   rijders:[],                                uitThuis:"Thuis", tijd:"08:30", team:"Dev Doorn Jo15-2JM",     plaats:"Driebergen",      matchType:"normaal", eindstand:null,   type:"wedstrijd" },
+    { id:13, datum:"2026-05-16", vlag:"ntb",    rijders:["Joshua","Cas"],                  uitThuis:"Uit",   tijd:"09:00", team:"DOVO Jo15-3",            plaats:"Veenendaal",      matchType:"normaal", eindstand:null,   type:"wedstrijd" }
+];
+
+let data = JSON.parse(localStorage.getItem('jo15_v1') || 'null') || JSON.parse(JSON.stringify(DEFAULT));
+let activeTab = 'aankomend';
+let editId = null;
+
+// ===================== HELPERS =====================
+const DAYS   = ['zo','ma','di','wo','do','vr','za'];
+const MONTHS = ['jan','feb','mrt','apr','mei','jun','jul','aug','sep','okt','nov','dec'];
+
+function fmtDate(d) {
+    const dt = new Date(d);
+    return `${DAYS[dt.getDay()]} ${dt.getDate()} ${MONTHS[dt.getMonth()]} ${dt.getFullYear()}`;
+}
+
+function isUpcoming(d) {
+    const dt = new Date(d);
+    dt.setHours(0,0,0,0);
+    const t = new Date(); t.setHours(0,0,0,0);
+    return dt >= t;
+}
+
+function nextMatchId() {
+    const u = data.filter(m => m.type === 'wedstrijd' && isUpcoming(m.datum));
+    return u.length ? u[0].id : null;
+}
+
+function stripeClass(m) {
+    if (m.type === 'kantine') return 'stripe-kantine';
+    if (m.matchType === 'beker') return 'stripe-beker';
+    if (m.matchType === 'oefen') return 'stripe-oefen';
+    return m.uitThuis === 'Thuis' ? 'stripe-thuis' : 'stripe-uit';
+}
+
+function badgeHtml(m) {
+    if (m.type === 'kantine') return `<span class="badge badge-kantine">🍽️ Kantine</span>`;
+    let b = `<span class="badge ${m.uitThuis === 'Thuis' ? 'badge-thuis' : 'badge-uit'}">${m.uitThuis}</span>`;
+    if (m.matchType === 'beker') b += `<span class="badge badge-beker">🏆 Beker</span>`;
+    if (m.matchType === 'oefen') b += `<span class="badge badge-oefen">🎯 Oefenpot</span>`;
+    return b;
+}
+
+// ===================== RENDER =====================
+function render() {
+    const nid = nextMatchId();
+    let list = activeTab === 'aankomend' ? data.filter(m => isUpcoming(m.datum))
+             : activeTab === 'gespeeld'  ? data.filter(m => !isUpcoming(m.datum))
+             : data;
+
+    if (!list.length) {
+        document.getElementById('content').innerHTML = `
+            <div class="empty">
+                <div class="empty-icon">⚽</div>
+                <div class="empty-text">Geen wedstrijden gevonden</div>
+            </div>`;
+        return;
+    }
+
+    document.getElementById('content').innerHTML = list.map(m => renderCard(m, nid)).join('');
+}
+
+function renderCard(m, nid) {
+    const past = !isUpcoming(m.datum);
+
+    if (m.type === 'kantine') {
+        return `
+        <div class="card ${past ? 'past' : ''}">
+            <div class="card-stripe ${stripeClass(m)}"></div>
+            <div class="card-body">
+                <div class="card-top">
+                    <div><div class="card-date-line">${fmtDate(m.datum)}</div></div>
+                    <div class="badges">${badgeHtml(m)}</div>
+                </div>
+                <div class="card-team">${m.dienst}</div>
+                <hr class="divider">
+                <div class="info-row">
+                    <span class="info-label">🍺 Bar</span>
+                    <span class="info-value ${m.bardienst==='Onbekend'?'ntb':''}">${m.bardienst==='Onbekend'?'Nader te bepalen':m.bardienst}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">🍳 Keuken</span>
+                    <span class="info-value ${m.keuken==='Onbekend'?'ntb':''}">${m.keuken==='Onbekend'?'Nader te bepalen':m.keuken}</span>
+                </div>
+                <div class="card-actions">
+                    <button class="btn-edit" onclick="openModal(${m.id})">✏️ Bewerken</button>
+                </div>
+            </div>
+        </div>`;
+    }
+
+    const isNext = m.id === nid;
+    const rijdersHtml = m.uitThuis === 'Uit'
+        ? `<div class="info-row">
+               <span class="info-label">🚗 Rijdt</span>
+               <span class="info-value">
+               ${m.rijders && m.rijders.length
+                   ? `<div class="chips">${m.rijders.map(r => `<span class="chip ${r==='Fiets'?'fiets':''}">${r==='Fiets'?'🚲 Fiets':r}</span>`).join('')}</div>`
+                   : `<span style="color:#aaa;font-style:italic">Nog niet ingevuld</span>`}
+               </span>
+           </div>` : '';
+
+    const scoreHtml = m.eindstand
+        ? `<hr class="divider"><div class="info-row"><span class="info-label">Uitslag</span><span class="score">${m.eindstand}</span></div>`
+        : '';
+
+    return `
+    <div class="card ${past ? 'past' : ''}">
+        <div class="card-stripe ${stripeClass(m)}"></div>
+        <div class="card-body">
+            <div class="card-top">
+                <div>
+                    <div class="card-date-line">${fmtDate(m.datum)}</div>
+                    ${isNext ? '<span class="next-tag">Volgende wedstrijd</span>' : ''}
+                </div>
+                <div class="badges">${badgeHtml(m)}</div>
+            </div>
+            <div class="card-team">${m.team}</div>
+            <div class="card-meta">
+                <span class="meta-item">🕐 ${m.tijd}</span>
+                <span class="meta-item">📍 ${m.uitThuis === 'Thuis' ? 'Driebergen' : m.plaats}</span>
+            </div>
+            <hr class="divider">
+            <div class="info-row">
+                <span class="info-label">🚩 Vlag</span>
+                <span class="info-value ${m.vlag==='ntb'?'ntb':''}">${m.vlag==='ntb'?'Nader te bepalen':m.vlag}</span>
+            </div>
+            ${rijdersHtml}
+            ${scoreHtml}
+            <div class="card-actions">
+                <button class="btn-edit" onclick="openModal(${m.id})">✏️ Bewerken</button>
+            </div>
+        </div>
+    </div>`;
+}
+
+// ===================== TABS =====================
+function setTab(tab, el) {
+    activeTab = tab;
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    el.classList.add('active');
+    render();
+}
+
+// ===================== MODAL =====================
+function openModal(id) {
+    editId = id;
+    const m = data.find(x => x.id === id);
+
+    document.getElementById('modalTitle').textContent = m.type === 'kantine' ? m.dienst : m.team;
+    document.getElementById('modalDate').textContent = fmtDate(m.datum);
+
+    if (m.type === 'kantine') {
+        document.getElementById('modalForm').innerHTML = `
+            <div class="form-group">
+                <label class="form-label">🍺 Bardienst — namen ouders</label>
+                <input class="form-input" id="f_bar" value="${m.bardienst === 'Onbekend' ? '' : m.bardienst}" placeholder="bijv. Simon en Mila">
+            </div>
+            <div class="form-group">
+                <label class="form-label">🍳 Keukendienst — namen ouders</label>
+                <input class="form-input" id="f_keuken" value="${m.keuken === 'Onbekend' ? '' : m.keuken}" placeholder="bijv. Thomas en Tonito">
+            </div>`;
+    } else {
+        const rijen = (m.rijders || []).map(r => `
+            <div class="rijder-row">
+                <input class="form-input" value="${r}" placeholder="Naam / Fiets">
+                <button class="btn-remove" onclick="this.closest('.rijder-row').remove()">×</button>
+            </div>`).join('');
+
+        const showRijders = m.uitThuis === 'Uit';
+
+        document.getElementById('modalForm').innerHTML = `
+            <div class="form-group">
+                <label class="form-label">🚩 Vlag ouder</label>
+                <input class="form-input" id="f_vlag" value="${m.vlag === 'ntb' ? '' : m.vlag}" placeholder="Naam vlag ouder">
+            </div>
+            ${showRijders ? `
+            <div class="form-group">
+                <label class="form-label">🚗 Rijders</label>
+                <div class="rijders-list-editor" id="rijdersEditor">${rijen}</div>
+                <button class="btn-add" onclick="addRijder()">+ Rijder toevoegen</button>
+            </div>` : ''}
+            <div class="form-group">
+                <label class="form-label">⚽ Eindstand (na de wedstrijd)</label>
+                <input class="form-input" id="f_score" value="${m.eindstand || ''}" placeholder="bijv. 3-1">
+            </div>`;
+    }
+
+    document.getElementById('overlay').classList.add('open');
+    setTimeout(() => document.querySelector('.form-input')?.focus(), 350);
+}
+
+function addRijder() {
+    const ed = document.getElementById('rijdersEditor');
+    const div = document.createElement('div');
+    div.className = 'rijder-row';
+    div.innerHTML = `
+        <input class="form-input" value="" placeholder="Naam / Fiets">
+        <button class="btn-remove" onclick="this.closest('.rijder-row').remove()">×</button>`;
+    ed.appendChild(div);
+    div.querySelector('input').focus();
+}
+
+function closeModal() {
+    document.getElementById('overlay').classList.remove('open');
+    editId = null;
+}
+
+function handleOverlay(e) {
+    if (e.target === document.getElementById('overlay')) closeModal();
+}
+
+function save() {
+    const m = data.find(x => x.id === editId);
+
+    if (m.type === 'kantine') {
+        m.bardienst = document.getElementById('f_bar').value.trim() || 'Onbekend';
+        m.keuken    = document.getElementById('f_keuken').value.trim() || 'Onbekend';
+    } else {
+        m.vlag = document.getElementById('f_vlag').value.trim() || 'ntb';
+
+        const ed = document.getElementById('rijdersEditor');
+        if (ed) {
+            m.rijders = Array.from(ed.querySelectorAll('input'))
+                .map(i => i.value.trim())
+                .filter(v => v !== '');
+        }
+
+        const sc = document.getElementById('f_score').value.trim();
+        m.eindstand = sc || null;
+    }
+
+    localStorage.setItem('jo15_v1', JSON.stringify(data));
+    closeModal();
+    render();
+    toast('Opgeslagen ✓');
+}
+
+// ===================== TOAST =====================
+function toast(msg) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+// ===================== INIT =====================
+render();
+</script>
+</body>
+</html>
